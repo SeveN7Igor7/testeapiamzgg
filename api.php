@@ -52,6 +52,9 @@ function generate_email() {
 
 // Verifica se o método da requisição é POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Obtém os dados do corpo da requisição
+    parse_str(file_get_contents('php://input'), $_POST);
+
     $lista = str_replace(" ", "", $_POST['lista']);
     $separar = explode("|", $lista);
     $cc = $separar[0];
