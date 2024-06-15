@@ -106,6 +106,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $info_bin = bin($lista);
     $cookie1 = $_POST['cookie1'];
     $cookie = trim($cookie1);
+} else {
+    echo "Método não permitido";
+}
 
 $ch = curl_init();
   curl_setopt($ch, CURLOPT_URL, "https://www.4devs.com.br/ferramentas_online.php");
