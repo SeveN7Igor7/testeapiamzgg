@@ -6,13 +6,13 @@ $time = time();
 
 ini_set('memory_limit', '-1');
 
-function trazer($string, $start, $end){
+function trazer($string, $start, $end) {
     $str = explode($start, $string);
     $str = explode($end, $str[1]);
     return $str[0];
 }
 
-function multiexplode($string){
+function multiexplode($string) {
     $delimiters = array("|", ";", ":", "/", "»", "«", ">", "<");
     $one = str_replace($delimiters, $delimiters[0], $string);
     $two = explode($delimiters[0], $one);
@@ -21,98 +21,91 @@ function multiexplode($string){
 
 function gerarCPF() {
     for ($i = 0; $i < 9; $i++) {
-      $cpf[$i] = mt_rand(0, 9);
+        $cpf[$i] = mt_rand(0, 9);
     }
-  
+
     $soma = 0;
     for ($i = 0; $i < 9; $i++) {
-      $soma += ($cpf[$i] * (10 - $i));
+        $soma += ($cpf[$i] * (10 - $i));
     }
     $resto = $soma % 11;
     $cpf[9] = ($resto < 2) ? 0 : (11 - $resto);
-  
+
     $soma = 0;
     for ($i = 0; $i < 10; $i++) {
-      $soma += ($cpf[$i] * (11 - $i));
+        $soma += ($cpf[$i] * (11 - $i));
     }
     $resto = $soma % 11;
     $cpf[10] = ($resto < 2) ? 0 : (11 - $resto);
-  
+
     return implode('', $cpf);
 }
 
 function generate_email() {
     $domains = array("gmail.com", "hotmail.com", "yahoo.com", "outlook.com");
     $domain = $domains[array_rand($domains)];
-    $timestamp = time(); // timestamp atual em segundos
-    $random_num = mt_rand(1, 10000); // número aleatório entre 1 e 10000
+    $timestamp = time();
+    $random_num = mt_rand(1, 10000);
     $email = "user_" . $timestamp . "_" . $random_num . "@$domain";
     return $email;
 }
 
-// $email = generate_email();
-// $cpf = gerarCPF();
+// Verifica se o método da requisição é POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $lista = str_replace(" ", "", $_POST['lista']);
+    $separar = explode("|", $lista);
+    $cc = $separar[0];
+    $mes = $separar[1];
+    $ano = $separar[2];
+    $cvv = $separar[3];
+    $lista = ("$cc|$mes|$ano|$cvv");
 
+    $parte1 = substr($cc, 0, 4);
+    $parte2 = substr($cc, 4, 4);
+    $parte3 = substr($cc, 8, 4);
+    $parte4 = substr($cc, 12, 4);
 
-extract($_GET);
-$lista = str_replace(" " , "", $lista);
-$separar = explode("|", $lista);
-$cc = $separar[0];
-$mes = $separar[1];
-$ano = $separar[2];
-$cvv = $separar[3];
-$lista = ("$cc|$mes|$ano|$cvv");
+    $json_str = file_get_contents('bins.json');
+    $bins = json_decode($json_str, true);
+    $bin = substr($cc, 0, 6);
+    if (isset($bins[$bin])) {
+        $a = json_encode($bins[$bin]);
 
-$parte1 = substr($cc, 0, 4);
-$parte2 = substr($cc, 4, 4);
-$parte3 = substr($cc, 8, 4);
-$parte4 = substr($cc, 12, 4);
-
-$json_str = file_get_contents('bins.json');
-$bins     = json_decode($json_str, true);
-$bin      = substr($cc, 0, 6);
-if (isset($bins[$bin])) {
-
-    $a = json_encode($bins[$bin]);
-
-    $bandeira = getStr($a, 'bandeira":"', '"');
-    $nivel    = getstr($a, 'level":"', '"');
-    $bank     = getStr($a, 'banco":"', '"');
-    $pais     = getstr($a, 'pais":"', '"');
-    $puxad    = " $bandeira$nivel $bank $pais";
-} else {
-
-function bin ($cc){
-$contents = file_get_contents("bins.csv");
-$pattern = preg_quote(substr($cc, 0, 6), '/');
-$pattern = "/^.*$pattern.*\$/m";
-if (preg_match_all($pattern, $contents, $matches)) {
-$encontrada = implode("\n", $matches[0]);
-}
-$pieces = explode(";", $encontrada);
-return "$pieces[1] $pieces[2] $pieces[3] $pieces[4] $pieces[5]";
-}
-$bin = bin($lista);
-}
-
-function generateRandomString($length = 12)
-{
-    $characters       = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    $charactersLength = strlen($characters);
-    $randomString     = '';
-    for ($i = 0; $i < $length; $i++) {
-        $randomString .= $characters[rand(0, $charactersLength - 1)];
+        $bandeira = trazer($a, 'bandeira":"', '"');
+        $nivel = trazer($a, 'level":"', '"');
+        $bank = trazer($a, 'banco":"', '"');
+        $pais = trazer($a, 'pais":"', '"');
+        $puxad = " $bandeira$nivel $bank $pais";
+    } else {
+        function bin($cc) {
+            $contents = file_get_contents("bins.csv");
+            $pattern = preg_quote(substr($cc, 0, 6), '/');
+            $pattern = "/^.*$pattern.*\$/m";
+            if (preg_match_all($pattern, $contents, $matches)) {
+                $encontrada = implode("\n", $matches[0]);
+            }
+            $pieces = explode(";", $encontrada);
+            return "$pieces[1] $pieces[2] $pieces[3] $pieces[4] $pieces[5]";
+        }
+        $bin = bin($lista);
     }
-    return $randomString;
-}
 
+    function generateRandomString($length = 12) {
+        $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+        return $randomString;
+    }
 
-#################################################
-// by: bruxo
+    #################################################
+    // by: bruxo
 
-$info_bin = bin($lista);
-$cookie1 = $_POST['cookie1'];
-$cookie = trim($cookie1);
+    $info_bin = bin($lista);
+    $cookie1 = $_POST['cookie1'];
+    $cookie = trim($cookie1);
 
 $ch = curl_init();
   curl_setopt($ch, CURLOPT_URL, "https://www.4devs.com.br/ferramentas_online.php");
